@@ -69,6 +69,25 @@ class IntentServiceInterface:
         self.bus.emit(Message("register_intent", intent_parser.__dict__))
         self.registered_intents.append((name, intent_parser))
 
+    def detach_keyword(self, vocab_type, entity, aliases=None):
+        """Remove a keyword from the intent service.
+
+        Arguments:
+            vocab_type(str): Keyword reference
+            entity (str): Primary keyword
+            aliases (list): List of alternative kewords
+        """
+        self.bus.emit(Message("detach_vocab", {
+            "vocab_ref": vocab_ref, "entity": entity, "aliases": aliases}))
+
+    def detach_regex(self, regex):
+        """Remove a regex from the intent service.
+
+        Arguments:
+            regex(str): Regex to be detached
+        """
+        self.bus.emit(Message("detach_regex", {"regex": regex}))
+
     def detach_intent(self, intent_name):
         """Remove an intent from the intent service.
 
