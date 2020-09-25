@@ -548,6 +548,38 @@ class GoVivaceSTT(TokenSTT):
         return response.json()["result"]["hypotheses"][0]["transcript"]
 
 
+class SileroSTT(STT):
+    def __init__(self):
+        super(SileroSTT, self).__init__()
+        import torch
+        # import zipfile
+        import torchaudio
+        from glob import glob
+
+        self.device = torch.device('cpu')  # gpu also works, but our models are fast enough for CPU
+        self.model, self.decoder, utils = torch.hub.load(
+                                            github='snakers4/silero-models',
+                                            model='silero_stt',
+                                            language='en',  # also available 'de', 'es'
+                                            device=self.device)
+        (read_batch, split_into_batches,
+        read_audio, prepare_model_input) = utils  # see function signature for details
+
+    def execute(self, audio, language=None):
+        language = language or self.lang
+        batches = split_into_batches([audio], batch_size=1)
+        response = prepare_model_input(read_batch(batches[0]),
+                                       device=self.device)
+        return self.get_response(response)
+
+    def get_response(self, response):
+        try:
+            output = self.model(response)[0]
+            return self.decoder(output.cpu())
+        except Exception:
+            return None
+
+
 def load_stt_plugin(module_name):
     """Wrapper function for loading stt plugin.
 
@@ -572,6 +604,7 @@ class STTFactory:
         "deepspeech_server": DeepSpeechServerSTT,
         "deepspeech_stream_server": DeepSpeechStreamServerSTT,
         "mycroft_deepspeech": MycroftDeepSpeechSTT,
+        "silero": SileroSTT,
         "yandex": YandexSTT
     }
 
