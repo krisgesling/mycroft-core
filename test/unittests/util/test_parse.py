@@ -145,11 +145,13 @@ class TestNormalize(unittest.TestCase):
         self.assertEqual(extract_number("a couple thousand beers"), 2000)
         self.assertEqual(extract_number("100%"), 100)
 
-    def test_extract_datetime(self):
+    def test_extract_timezone(self):
         """Check that extract_datetime returns the expected timezone."""
-        tz = default_timezone()
+        default_tz = default_timezone()
         dt, _ = extract_datetime("today")
-        self.assertEqual(tz, dt.tzinfo)
+        # As default_timezone() returns tzlocal() and extract_datetime() may
+        # return a tzfile we cannot directly compare dt.tzinfo to default_tz.
+        self.assertEqual(dt, dt.astimezone(default_tz))
 
     def test_extract_duration_en(self):
         self.assertEqual(extract_duration("10 seconds"),
